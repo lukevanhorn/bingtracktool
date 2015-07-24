@@ -1,0 +1,32 @@
+{
+  "name": "bing-track-tool",
+  "description": "Simple server / client example tool for showing lat,long tracks in csv format",
+  "main": "./app.js",
+  "author": {
+    "name": "Luke Van Horn"
+  },
+  "version": "0.1.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lukevanhorn/bingtracktool"
+  },
+  "bugs": {
+    "url": "https://github.com/lukevanhorn/bingtracktool/issues"
+  },
+  "keywords": [
+    "bing",
+	"azure",
+    "web app",
+	"websites"
+  ],
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "http://opensource.org/licenses/MIT"
+    }
+  ],
+  "engine": {
+    "node": ">=0.8"
+  },
+  "homepage": "https://github.com/lukevanhorn/bingtracktool"
+}

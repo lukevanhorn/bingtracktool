@@ -23,7 +23,8 @@ Required fields:
 	
 ##Server
 
-This uses a very simple native node.js webserver I developed of other projects.  It works incredibly well with Azure web apps.
+This uses a very simple native node.js webserver I developed for a simple way to serve files, basic route handling, upload and downlaod.  
+I find it works very well with Azure web apps.
 
 ## Setup:
 
