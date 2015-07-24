@@ -1,4 +1,4 @@
-Bing Track Tool
+Bing Maps Track Example
 =======
 Author: Luke Van Horn, Microsoft, 2015
 License: MIT, open source
