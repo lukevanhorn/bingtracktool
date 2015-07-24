@@ -42,6 +42,6 @@ Using the [Azure Management Portal](https://manage.windowsazure.com)
 * Navigate to the /public/index.html file
 * Enter your bing maps api key in the index.html near line 29:
 
-	credentials:"<insert your bing maps key>",
+	credentials:"insert your bing maps key",
 	
 * Click the run button
