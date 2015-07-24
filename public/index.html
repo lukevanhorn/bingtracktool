@@ -1,0 +1,178 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+   <head>
+      <title>Bing Route Tool</title>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+      <link rel="stylesheet" type="text/css" href="//netdna.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" />      
+
+      <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+      <script type="text/javascript" src="https://ecn.dev.virtualearth.net/mapcontrol/mapcontrol.ashx?v=7.0&s=1"></script>
+      <script src='https://netdna.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js'></script>
+      <script type="text/javascript" src="ajax.js"></script>
+      
+      <script type="text/javascript">
+            var lineVertices = new Array();
+            var map = null;
+            var street;
+            var pinId = 1;
+            var selectedFile;
+                      
+            $(document).ready(function() {
+                  
+                  $("#logFiles").css('height', (window.innerHeight * .9) + 'px');
+                  $("#logFiles").css('width', (window.innerWidth * .2) + 'px');
+                  $("#mapDiv").css('height', (window.innerHeight * .9) + 'px');
+                  $("#mapDiv").css('width', (window.innerWidth * .7) + 'px');
+                  $("#mapDiv").css('left', (window.innerWidth * .25) + 'px'); 
+                  
+                  map = new Microsoft.Maps.Map(document.getElementById("mapDiv"),{
+                        credentials:"AptAyFS1uP80QPOPILwbK4dJC1063MGbzTxydX72-pMFN5z5oAnTZBWFFtzXu3ga",
+                        mapTypeId: Microsoft.Maps.MapTypeId.road
+                  }); 
+                   
+                  updateList();     
+            }); 
+            
+            function uploadDataFiles(files) {
+                $("#dataList").html("<img style='margin: 5px;' src='/images/load.gif' />");
+                $.each(files, function (index, file) {
+                    window.ajax.upload('upload/' + file.name, file, false, null, function success() {
+                        setTimeout(function(){
+                              updateList();                              
+                              loadfile(file.name);
+                        },2000);
+                    });
+                });
+            }
+
+            function updateList() {
+                  $.ajax({
+                        type: "GET",
+                        url: "list",
+                        dataType: "text",
+                        success: function(data) {
+                              if(!data || data.length === 0) {
+                                    return;
+                              }
+                              
+                              var list = data.split(',');
+                              var temp = [];
+                              list.forEach(function(file){
+      
+                                  var item = '<li><a href="javascript:loadfile(\'' + file + '\');">' + file +'</a>';
+                                  item += '</li>';
+                              
+                                  temp.push(item);
+                              });
+                              
+                              document.getElementById('dataList').innerHTML = '<p><ul>' + temp.join('') + '</ul></p>';
+                              
+                              if(!selectedFile) {
+                                    loadfile(list[0]);                          
+                              }
+                        }
+                  });
+            }
+            
+
+            function loadfile(filename) {
+                  map.entities.clear();
+                  lineVertices = new Array();
+                  pinId = 1;
+                  
+                  selectedFile = filename;
+                  $("#selectedFileText").html(filename);    
+                              
+                  $.ajax({
+                        type: "GET",
+                        url: "data/" + filename,
+                        dataType: "text",
+                        success: function(data) {
+                              processData(data);
+                        }
+                  });
+            }
+            
+            function processData(allText) {
+                var allTextLines = allText.split(/\r\n|\n/);
+                var headers = allTextLines[0].split(',');
+                var rows = [];
+            
+                for (var i=1; i<allTextLines.length; i++) {
+                    var data = allTextLines[i].split(',');
+                    if (data.length == headers.length) {
+            
+                        var row = [];
+                        for (var j=0; j<headers.length; j++) {
+                            row[headers[j]] = data[j];
+                        }
+                        rows.push(row);
+                    }
+                }
+                
+                  rows.forEach(function(x){
+                      var l = new Microsoft.Maps.Location(x.latitude,x.longitude);
+                      lineVertices.push(l);
+                      
+                      if(street != x.location.toUpperCase() && x.location != "") {
+                            var pin = new Microsoft.Maps.Pushpin(l, {text: (pinId++).toString()});
+                            
+                            // Create the infobox for the pushpin
+                              var pinInfoBox = new Microsoft.Maps.Infobox(pin.getLocation(), 
+                                    {
+                                          title: x.location, 
+                                          description: getDescriptionText(x), 
+                                          height: 400,
+                                          width: 300,
+                                          visible: false, 
+                                          offset: new Microsoft.Maps.Point(0,15)
+                                    });
+                              
+                              // Add handler for the pushpin click event.
+                              Microsoft.Maps.Events.addHandler(pin, 'click', function(e) {
+                                    pinInfoBox.setOptions({ visible:true });
+                              });
+                              
+                              map.entities.push(pin);
+                              map.entities.push(pinInfoBox);
+                              
+                              //locations.push(pin);
+                              street = x.location.toUpperCase(); 
+                      }
+                  });
+                
+                  var line = new Microsoft.Maps.Polyline(lineVertices);
+                  
+                  // Add the polyline to the map
+                  map.entities.push(line);
+                  
+                  var bestview = Microsoft.Maps.LocationRect.fromLocations(lineVertices);
+                  map.setView({bounds:bestview });                  
+                //GetMap();
+            }
+            
+            function getDescriptionText(data) {
+                  var text = "<table>";
+                  for(var prop in data) {
+                        text += ("<tr><td>" + prop + "</td><td>" + data[prop] + "</td></tr>");
+                  }
+                  text += "</table>";
+                  
+                  return text;
+            }
+
+      </script>
+   </head>
+   <body>
+      <div id="logFiles" style="position:absolute; margin-left: 20px">
+            <h3 id="selectedFileText"></h3>
+            <div>
+                <h4>Log Files</h4>
+                <div class="listbox scroll" id="dataList">
+                </div>
+            </div>
+            upload: <input id="dataUploadInput" type='file' onchange="uploadDataFiles(this.files)" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" />
+      </div>
+      <div id='mapDiv' style="position:absolute;"></div>
+   </body>
+</html>
